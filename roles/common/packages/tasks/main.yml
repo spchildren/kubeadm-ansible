@@ -1,0 +1,38 @@
+---
+# tasks file for ./roles/common/packages
+- name: Add Kubernetes yum repository
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes Repository
+    file: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-$basearch
+    enabled: yes
+    gpgcheck: yes
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: Update yum
+  yum:
+    name: '*'
+    state: present
+
+- name: Install kubernetes packages
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - docker
+    - kubelet
+    - kubeadm
+    - kubectl 
+
+- name: Kubernetes and Docker Reload
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  with_items:
+    - docker
+    - kubelet

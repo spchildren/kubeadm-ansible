@@ -1,0 +1,43 @@
+---
+# tasks file for ./roles/common
+- name: Distribute hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+- name: Disable system swap
+  shell: "swapoff -a"
+
+- name: Remove current swaps from fstab
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '(?i)^([^#][\S]+\s+(none|swap)\s+swap.*)'
+    line: '# \1'
+    backrefs: yes
+    state: present
+
+- name: Disable swappiness and pass bridged IPv4 traffic to iptable's chains
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  with_items:
+    - { name: 'vm.swappiness', value: '0' }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+  retries: 3
+  delay: 5
+
+- name: Firewall Settings
+  firewalld:
+    port:
+    permanent: true
+    state: enabled
+  with_items:
+    - 80/tcp
+    - 6443/tcp
+
+- name: Disable SELinux
+  selinux:
+    state: disabled

@@ -1,0 +1,14 @@
+- name: Setup initial k8s hosts
+  hosts: all
+  become: true
+
+  roles:
+    - common/system
+    - common/packages
+
+- name: Setup Master k8s
+  hosts: all
+  become: true
+
+  roles:
+    - kubeadm
